@@ -4,7 +4,7 @@ A comic packer written in Python for [Mihon](https://mihon.app/)/[Tachiyomi](htt
 一个使用 Python 编写，用于 [Mihon](https://mihon.app/)/[Tachiyomi](https://tachiyomi.org/) 的漫画打包脚本
 
 ## Feature/特性
-1. 该脚本完全使用 Python 内置库编写，无需额外下载任何包
+1. 该脚本完全使用 Python3.12.3 内置库编写，无需额外下载任何包
 2. 脚本会自动根据漫画的**文件夹名称**解析输出 `ComicInfo.xml`，但是需要确保**漫画的作者名称出现在第一个中括号内**
    
    一个正确✔️的示例：`(某些信息)[作者名] 标题名 [其他信息]`
