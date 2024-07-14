@@ -26,8 +26,8 @@ FOLDER_STORE_COMICS
   │ ├─image_1.ext
   │ └─image_n.ext
   └─comic_n
-    ├─image_1.ext
-    └─image_n.ext
+     ├─image_1.ext
+     └─image_n.ext
 ```
 
 运行时，脚本会在 `FOLDER_STORE_COMICS` 下创建 `output` 文件夹，并将打包好的漫画输出到该文件夹下，随后你可以参考 [Mihon | Local source](https://mihon.app/docs/guides/local-source/) 来使用打包好的漫画
