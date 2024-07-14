@@ -4,12 +4,13 @@ A comic packer written in Python for [Mihon](https://mihon.app/)/[Tachiyomi](htt
 一个使用 Python 编写，用于 [Mihon](https://mihon.app/)/[Tachiyomi](https://tachiyomi.org/) 的漫画打包脚本
 
 ## Feature/特性
-1. 脚本会自动根据漫画的**文件夹名称**解析输出 `ComicInfo.xml`，但是需要确保**漫画的作者名称出现在第一个中括号内**
+1. 该脚本完全使用 Python 内置库编写，无需额外下载任何包
+2. 脚本会自动根据漫画的**文件夹名称**解析输出 `ComicInfo.xml`，但是需要确保**漫画的作者名称出现在第一个中括号内**
    
    一个正确✔️的示例：`(某些信息)[作者名] 标题名 [其他信息]`
 
    一个错误❌的示例：`[某些信息][作者名] 标题名 [其他信息]`
-2. 脚本默认会生成漫画封面，如果你不需要，可以将脚本的 `generate_cover` 修改为 `false`
+3. 脚本默认会生成漫画封面，如果你不需要，可以将脚本的 `generate_cover` 修改为 `false`
 
 ## Usage/使用方法
 克隆本项目，进入项目文件夹下，在终端中输入并执行：
