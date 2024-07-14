@@ -1,4 +1,4 @@
-# comic_packer/漫画打包
+# comic-packer/漫画打包
 A comic packer written in Python for [Mihon](https://mihon.app/)/[Tachiyomi](https://tachiyomi.org/)
 
 一个使用 Python 编写，用于 [Mihon](https://mihon.app/)/[Tachiyomi](https://tachiyomi.org/) 的漫画打包脚本
