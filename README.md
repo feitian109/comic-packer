@@ -20,15 +20,15 @@ python comic_packer.py "path\to\FOLDER_STORE_COMICS"
 其中 `path\to\FOLDER_STORE_COMICS` 应该替换为**存储漫画的文件夹**的路径。同时，`FOLDER_STORE_COMICS` 的目录结构应该如下:
 ```
 FOLDER_STORE_COMICS
-  ├─comic_1
-  │ ├─image_1.ext
-  │ └─image_n.ext
-  ├─comic_2
-  │ ├─image_1.ext
-  │ └─image_n.ext
-  └─comic_n
-     ├─image_1.ext
-     └─image_n.ext
+├── comic_1
+│   ├── image_1.ext
+│   └── image_n.ext
+├── comic_2
+│   ├── image_1.ext
+│   └── image_n.ext
+└── comic_n
+    ├── image_1.ext
+    └── image_n.ext
 ```
 
 运行时，脚本会在 `FOLDER_STORE_COMICS` 下创建 `output` 文件夹，并将打包好的漫画输出到该文件夹下，随后你可以参考 [Mihon | Local source](https://mihon.app/docs/guides/local-source/) 来使用打包好的漫画
