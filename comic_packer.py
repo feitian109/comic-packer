@@ -17,7 +17,7 @@ default_info = {
     "Writer": "Unknown",
     "Penciller": "Unknown",
     "Summary": "Unknown",
-    "Genre": "Default Genre1, Default Genre2, Default Genre3",
+    "Genre": "Unknown",
     "Status": 2,
 }
 
@@ -42,8 +42,12 @@ url = {
 # 根据文件夹名推测信息
 def analysis(comic_name) -> dict:
     # 分析 Comic info，拆分成 `parts`
-    raw = re.split(r"(\[[^]]+\]|\([^)]+\)|【[^】]+】)", comic_name)
-    parts = [item.strip() for item in raw if item not in ["", " "]]
+    splited = re.split(r"(\[[^]]+\]|\([^)]+\)|【[^】]+】)", comic_name)
+    parts = []
+    for part in splited:
+        striped = part.strip()
+        if striped:
+            parts.append(striped)
 
     # 小括号
     parentheses_bracket = [i[1:-1] for i in parts if i[0] == "("]
@@ -56,29 +60,37 @@ def analysis(comic_name) -> dict:
 
     # 生成 `info`
     info = default_info
-    info["Series"] = title[0]
-    info["Writer"] = bracket.pop(0)
-    info["Penciller"] = info["Writer"]
+    if title:
+        info["Series"] = title[0]
+    else:
+        print("Unknown Series...", end="")
+
+    if bracket:
+        info["Writer"] = bracket.pop(0)
+        info["Penciller"] = info["Writer"]
+    else:
+        print("Unknown Writer...", end="")
+
     lst = parentheses_bracket + bracket + chinese_bracket
-    info["Genre"] = ", ".join(lst)
+    if lst:
+        info["Genre"] = ", ".join(lst)
+    else:
+        print("Unknown Genre...", end="")
     return info
 
 
-def zip(comic_path: Path, output_path: Path):
+def get_pics(comic_path) -> list:
+    pic_paths = []
+    for file_path in comic_path.iterdir():
+        # 通过扩展名判断文件是否是图片
+        if re.search(r"\.(jpg|jpeg|png)$", file_path.name):
+            pic_paths.append(file_path)
+    return pic_paths
+
+
+def zip(pic_paths: list, output_path: Path):
     zip_path = output_path / zip_name
     with zipfile.ZipFile(zip_path, "a") as z:
-        pic_paths = []
-        for file_path in comic_path.iterdir():
-            # 通过扩展名判断文件是否是图片
-            if re.search(r"\.(jpg|jpeg|png)$", file_path.name):
-                pic_paths.append(file_path)
-
-        # 生成封面
-        if generate_cover:
-            pic_paths.sort(key=lambda path: path.name)
-            cover_path = pic_paths[0]
-            shutil.copy(cover_path, output_path / ("cover" + cover_path.suffix))
-
         # 写入压缩包
         for pic_path in pic_paths:
             z.write(pic_path, pic_path.name)
@@ -117,7 +129,28 @@ def generate_info(comic_path: Path, output_path: Path):
 # 打包
 def pack(comic_path: Path, output_path: Path):
     print(f"Packing: {comic_path}...", end="")
-    zip(comic_path, output_path)
+
+    pic_paths = get_pics(comic_path)
+    # 如果没有获取到图片
+    if not pic_paths:
+        print("Warning: No pictures found, skip...")
+        return
+
+    # 检查输出路径是否存在
+    try:
+        output_path.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        print(f"Warning: Output directory exist, skip...")
+        return
+
+    zip(pic_paths, output_path)
+
+    # 生成封面
+    if generate_cover:
+        pic_paths.sort(key=lambda path: path.name)
+        cover_path = pic_paths[0]
+        shutil.copy(cover_path, output_path / ("cover" + cover_path.suffix))
+
     generate_info(comic_path, output_path)
     print("Done")
 
@@ -129,31 +162,22 @@ def main():
 
         # 不存在该路径
         if not work_path.exists():
-            print(f"Directory '{work_path}' not exist")
+            print(f"Error: Work path not exist")
 
         # 路径为文件夹时
         elif work_path.is_dir():
             for comic_path in work_path.iterdir():  # 遍历漫画路径
-                # 跳过输出文件夹
-                if comic_path.name == "output":
-                    continue
-
                 if comic_path.is_dir():
-                    output_path = work_path / "output" / comic_path.name  # 输出路径
-
-                    try:
-                        output_path.mkdir(parents=True, exist_ok=False)
-                        
-                    # 输出路径已存在时
-                    except:
-                        print(f"Warning: {output_path} exist, skip...")
+                    # 跳过输出文件夹
+                    if comic_path.name == "output":
                         continue
 
+                    output_path = work_path / "output" / comic_path.name  # 输出路径
                     pack(comic_path, output_path)
 
         # 路径为文件或其他情况时
         else:
-            print("Error: Not a folder")
+            print("Error: Work path not a folder")
 
 
 if __name__ == "__main__":
