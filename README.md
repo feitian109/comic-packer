@@ -34,4 +34,4 @@ FOLDER_STORE_COMICS
 运行时，脚本会在 `FOLDER_STORE_COMICS` 下创建 `output` 文件夹，并将打包好的漫画输出到该文件夹下，随后你可以参考 [Mihon | Local source](https://mihon.app/docs/guides/local-source/) 来使用打包好的漫画
 
 ## License
-This project is licensed under the GNU Gerneral Public License V3.0.
+MIT license
