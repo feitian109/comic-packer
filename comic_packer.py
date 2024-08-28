@@ -12,7 +12,7 @@ GENERATE_COVER = True
 ZIP_NAME = "Chapter 01.zip"
 
 # 默认值，`Series`, `Writer`, `Penciller`, `Genre` 会自动推测
-default_info = {
+DEFAULT_INFO = {
     "Series": "Unknown",
     "Writer": "Unknown",
     "Penciller": "Unknown",
@@ -22,7 +22,7 @@ default_info = {
 }
 
 # 状态值对应表
-status_values = {
+STATUS_VALUES = {
     0: "Unknown",
     1: "Ongoing",
     2: "Completed",
@@ -32,14 +32,17 @@ status_values = {
     6: "On hiatus",
 }
 
+# 漫画图片扩展名，扩展名不在列表中的文件将会被过滤掉
+PIC_SUFFIXS = [".jpg", ".jpeg", ".png"]
+
 # 用于 info 生成
-url = {
+XML_URLS = {
     "XMLSchema": "http://www.w3.org/2001/XMLSchema",
     "XMLSchema_instance": "http://www.w3.org/2001/XMLSchema-instance",
 }
 
 
-def analysis(comic_name: str) -> dict:
+def parse(comic_name: str) -> dict:
     """Guess comic's info based on the comic_name."""
 
     # 分析 Comic info，根据括号拆分成 `parts`
@@ -60,7 +63,7 @@ def analysis(comic_name: str) -> dict:
     title = [i for i in parts if i[0] not in ["(", "[", "【"]]
 
     # 生成 `info`
-    info = default_info
+    info = DEFAULT_INFO
     # 如果找到标题
     if title:
         info["Series"] = title[0]
@@ -87,7 +90,7 @@ def get_pics(comic_path: Path) -> list:
     pic_paths = []
     for file_path in comic_path.iterdir():
         # 通过扩展名判断文件是否是图片
-        if file_path.suffix in ["jpg", "jpeg", "png"]:
+        if file_path.suffix in PIC_SUFFIXS:
             pic_paths.append(file_path)
     return pic_paths
 
@@ -105,15 +108,15 @@ def compress_pics(pic_paths: list, output_path: Path):
 def generate_info(comic_path: Path, output_path: Path):
     """Generate `ComicInfo.xml`."""
 
-    info = analysis(comic_path.name)
+    info = parse(comic_path.name)
     info_path = output_path / "ComicInfo.xml"
 
     # 生成 `root`
     root = ET.Element(
         "ComicInfo",
         attrib={
-            "xmlns:xsd": url["XMLSchema"],
-            "xmlns:xsi": url["XMLSchema_instance"],
+            "xmlns:xsd": XML_URLS["XMLSchema"],
+            "xmlns:xsi": XML_URLS["XMLSchema_instance"],
         },
     )
 
@@ -125,9 +128,9 @@ def generate_info(comic_path: Path, output_path: Path):
     status = ET.SubElement(
         root,
         "ty:PublishingStatusTachiyomi",
-        attrib={"xmlns:ty": url["XMLSchema"]},
+        attrib={"xmlns:ty": XML_URLS["XMLSchema"]},
     )
-    status.text = status_values[info["Status"]]
+    status.text = STATUS_VALUES[info["Status"]]
 
     # 写入 `ComicInfo.xml`
     tree = ET.ElementTree(root)
