@@ -2,7 +2,7 @@ import sys
 import shutil
 import zipfile
 from pathlib import Path
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 # 生成封面
 GENERATE_COVER = True
@@ -44,60 +44,54 @@ XML_URLS = {
 def parse(comic_name: str) -> dict:
     """Guess comic's info based on the comic_name."""
 
+    part = ""
+    previous_char = None
+
     parentheses_bracket = []
     bracket = []
     chinese_bracket = []
     title = []
 
-    part = ""
-    previous_char = None
+    bracket_contents = {"(": parentheses_bracket, "[": bracket, "【": chinese_bracket}
     bracket_pair = {"(": ")", "[": "]", "【": "】"}
 
     for c in comic_name:
         if previous_char is None and c in bracket_pair.keys():
-            previous_char = c
-            p = part.strip()
-            if len(p) > 0:
-                title.append(p)
-
+            # 开始一个新括号对
+            if part.strip():
+                title.append(part.strip())
             part = ""
+            previous_char = c
 
         elif previous_char is not None and c == bracket_pair[previous_char]:
-            p = part.strip()
-            if len(p) > 0:
-                if previous_char == "(":
-                    parentheses_bracket.append(p)
-                elif previous_char == "[":
-                    bracket.append(p)
-                elif previous_char == "【":
-                    chinese_bracket.append(p)
-
+            # 结束当前的括号对
+            if part.strip():
+                bracket_contents[previous_char].append(part.strip())
             part = ""
             previous_char = None
 
         else:
             part += c
 
-    p = part.strip()
-    if len(p) > 0:
-        title.append(p)
+    if part.strip():
+        title.append(part.strip())
 
     # 生成 `info`
     info = DEFAULT_INFO
     # 如果找到标题
-    if len(title) > 0:
+    if title:
         info["Series"] = title[0]
     else:
         print("Unknown Series...", end="")
 
-    if len(bracket) > 0:
+    if bracket:
         info["Writer"] = bracket.pop(0)
         info["Penciller"] = info["Writer"]
     else:
         print("Unknown Writer...", end="")
 
     lst = parentheses_bracket + bracket + chinese_bracket
-    if len(lst) > 0:
+    if lst:
         info["Genre"] = ", ".join(lst)
     else:
         print("Unknown Genre...", end="")
@@ -116,7 +110,7 @@ def get_pics(comic_path: Path) -> list:
 
 
 def compress_pics(pic_paths: list, output_path: Path):
-    """Compress pictures into a zip file accroding to a list containing picture paths."""
+    """Compress pictures into a zip file according to a list containing picture paths."""
 
     zip_path = output_path / ZIP_NAME
     with zipfile.ZipFile(zip_path, "a") as z:
@@ -132,7 +126,7 @@ def generate_info(comic_path: Path, output_path: Path):
     info_path = output_path / "ComicInfo.xml"
 
     # 生成 `root`
-    root = ET.Element(
+    root = et.Element(
         "ComicInfo",
         attrib={
             "xmlns:xsd": XML_URLS["XMLSchema"],
@@ -142,10 +136,10 @@ def generate_info(comic_path: Path, output_path: Path):
 
     # 生成 `Series`, `Summary`, `Writer`, `Penciller`, `Genre` 信息
     for key in ["Series", "Summary", "Writer", "Penciller", "Genre"]:
-        ET.SubElement(root, key).text = info[key]
+        et.SubElement(root, key).text = info[key]
 
     # 生成 `Status` 信息
-    status = ET.SubElement(
+    status = et.SubElement(
         root,
         "ty:PublishingStatusTachiyomi",
         attrib={"xmlns:ty": XML_URLS["XMLSchema"]},
@@ -153,13 +147,13 @@ def generate_info(comic_path: Path, output_path: Path):
     status.text = STATUS_VALUES[info["Status"]]
 
     # 写入 `ComicInfo.xml`
-    tree = ET.ElementTree(root)
+    tree = et.ElementTree(root)
     tree.write(info_path, encoding="UTF-8", xml_declaration=True)
 
 
 # 打包
 def pack(comic_path: Path, output_path: Path) -> bool:
-    """Call a series of funtions to pack comic."""
+    """Call a series of functions to pack comic."""
 
     print(f"Packing: {comic_path}...", end="")
 
