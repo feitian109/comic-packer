@@ -1,4 +1,3 @@
-import re
 import sys
 import shutil
 import zipfile
@@ -9,7 +8,7 @@ import xml.etree.ElementTree as ET
 GENERATE_COVER = True
 
 # 生成的章节名称
-ZIP_NAME = "Chapter 01.zip"
+ZIP_NAME = "Chapter01.zip"
 
 # 默认值，`Series`, `Writer`, `Penciller`, `Genre` 会自动推测
 DEFAULT_INFO = {
@@ -45,39 +44,60 @@ XML_URLS = {
 def parse(comic_name: str) -> dict:
     """Guess comic's info based on the comic_name."""
 
-    # 分析 Comic info，根据括号拆分成 `parts`
-    splited = re.split(r"(\[[^]]+\]|\([^)]+\)|【[^】]+】)", comic_name)
-    parts = []
-    for part in splited:
-        striped = part.strip()
-        if striped:
-            parts.append(striped)
+    parentheses_bracket = []
+    bracket = []
+    chinese_bracket = []
+    title = []
 
-    # 小括号
-    parentheses_bracket = [i[1:-1] for i in parts if i[0] == "("]
-    # 中括号
-    bracket = [i[1:-1] for i in parts if i[0] == "["]
-    # 中文括号
-    chinese_bracket = [i[1:-1] for i in parts if i[0] == "【"]
-    # 标题
-    title = [i for i in parts if i[0] not in ["(", "[", "【"]]
+    part = ""
+    previous_char = None
+    bracket_pair = {"(": ")", "[": "]", "【": "】"}
+
+    for c in comic_name:
+        if previous_char is None and c in bracket_pair.keys():
+            previous_char = c
+            p = part.strip()
+            if len(p) > 0:
+                title.append(p)
+
+            part = ""
+
+        elif previous_char is not None and c == bracket_pair[previous_char]:
+            p = part.strip()
+            if len(p) > 0:
+                if previous_char == "(":
+                    parentheses_bracket.append(p)
+                elif previous_char == "[":
+                    bracket.append(p)
+                elif previous_char == "【":
+                    chinese_bracket.append(p)
+
+            part = ""
+            previous_char = None
+
+        else:
+            part += c
+
+    p = part.strip()
+    if len(p) > 0:
+        title.append(p)
 
     # 生成 `info`
     info = DEFAULT_INFO
     # 如果找到标题
-    if title:
+    if len(title) > 0:
         info["Series"] = title[0]
     else:
         print("Unknown Series...", end="")
 
-    if bracket:
+    if len(bracket) > 0:
         info["Writer"] = bracket.pop(0)
         info["Penciller"] = info["Writer"]
     else:
         print("Unknown Writer...", end="")
 
     lst = parentheses_bracket + bracket + chinese_bracket
-    if lst:
+    if len(lst) > 0:
         info["Genre"] = ", ".join(lst)
     else:
         print("Unknown Genre...", end="")
@@ -143,17 +163,17 @@ def pack(comic_path: Path, output_path: Path) -> bool:
 
     print(f"Packing: {comic_path}...", end="")
 
-    pic_paths = get_pics(comic_path)
-    # 如果没有获取到图片
-    if not pic_paths:
-        print("Warning: No pictures found, skip...")
-        return False
-
     # 检查输出路径是否存在
     try:
         output_path.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
-        print("Warning: Output directory exist, skip...")
+        print("Warning: Output directory exist, skip")
+        return False
+
+    pic_paths = get_pics(comic_path)
+    # 如果没有获取到图片
+    if not pic_paths:
+        print("Warning: No pictures found, skip")
         return False
 
     compress_pics(pic_paths, output_path)
