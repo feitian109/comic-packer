@@ -46,13 +46,8 @@ def parse(comic_name: str) -> dict:
 
     part = ""
     previous_char = None
-
-    parentheses_bracket = []
-    bracket = []
-    chinese_bracket = []
     title = []
-
-    bracket_contents = {"(": parentheses_bracket, "[": bracket, "【": chinese_bracket}
+    bracket_contents = {"(": [], "[": [], "【": []}
     bracket_pair = {"(": ")", "[": "]", "【": "】"}
 
     for c in comic_name:
@@ -84,13 +79,13 @@ def parse(comic_name: str) -> dict:
     else:
         print("Unknown Series...", end="")
 
-    if bracket:
-        info["Writer"] = bracket.pop(0)
+    if bracket_contents["["]:
+        info["Writer"] = bracket_contents["["].pop(0)
         info["Penciller"] = info["Writer"]
     else:
         print("Unknown Writer...", end="")
 
-    lst = parentheses_bracket + bracket + chinese_bracket
+    lst = bracket_contents["("] + bracket_contents["["] + bracket_contents["【"]
     if lst:
         info["Genre"] = ", ".join(lst)
     else:
@@ -152,7 +147,7 @@ def generate_info(comic_path: Path, output_path: Path):
 
 
 # 打包
-def pack(comic_path: Path, output_path: Path) -> bool:
+def pack(comic_path: Path, output_path: Path):
     """Call a series of functions to pack comic."""
 
     print(f"Packing: {comic_path}...", end="")
@@ -162,13 +157,13 @@ def pack(comic_path: Path, output_path: Path) -> bool:
         output_path.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
         print("Warning: Output directory exist, skip")
-        return False
+        return
 
     pic_paths = get_pics(comic_path)
     # 如果没有获取到图片
     if not pic_paths:
         print("Warning: No pictures found, skip")
-        return False
+        return
 
     compress_pics(pic_paths, output_path)
 
@@ -180,7 +175,6 @@ def pack(comic_path: Path, output_path: Path) -> bool:
 
     generate_info(comic_path, output_path)
     print("Done")
-    return True
 
 
 def main():
